@@ -1,0 +1,42 @@
+name: C
+permissions:
+  contents: read
+
+on:
+  push:
+    branches:
+      - $default-branch
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: ${{ matrix.os }} / ${{ matrix.cc }}
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - ubuntu-latest
+          - macos-latest
+        cc:
+          - gcc
+          - clang
+
+    env:
+      CC: ${{ matrix.cc }}
+      CFLAGS: -Wall -Wextra -Werror
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+
+    - name: Install Dependencies
+      run: ${{ matrix.install }}
+
+    - name: Bootstrap nob
+      run: $CC $CFLAGS -o nob nob.c
+
+    - name: Build
+      run: ./nob
