@@ -5,7 +5,7 @@ permissions:
 on:
   push:
     branches:
-      - $default-branch
+      - 'v*'
   pull_request:
   workflow_dispatch:
 
