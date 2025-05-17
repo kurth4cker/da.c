@@ -23,6 +23,7 @@ jobs:
         cc:
           - gcc
           - clang
+          - clang-cl
 
     env:
       CC: ${{ matrix.cc }}
