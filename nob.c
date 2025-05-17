@@ -8,10 +8,7 @@
 #define NOB_IMPLEMENTATION
 #include "nob.h"
 
-typedef struct {
-    size_t size;
-    const char *const *data;
-} Str_Array;
+#define ARRAY_LENGTH(arr) (sizeof(arr)/sizeof(*arr))
 
 static void
 add_cc_from_env_or(Nob_Cmd *cmd, const char *default_cc)
@@ -26,9 +23,32 @@ add_cc_from_env_or(Nob_Cmd *cmd, const char *default_cc)
     nob_cmd_append(cmd, cc);
 }
 
-#define compile(cmd, output, ...) _compile(cmd, output, __VA_ARGS__, NULL)
+#define run(cmd, ...) \
+    _run(cmd, \
+         ((const char*[]){__VA_ARGS__}), \
+         (sizeof((const char*[]){__VA_ARGS__})/sizeof(const char*)))
 static void
-_compile(Nob_Cmd *cmd, const char *output, ...)
+_run(Nob_Cmd *cmd, const char **args, size_t count)
+{
+    if (count < 1) {
+        fprintf(stderr, "[ERROR] run should be called with at least two argument: cmd and program\n");
+        exit(EXIT_FAILURE);
+    }
+
+    for (size_t i = 0; i < count; i++) {
+        nob_cmd_append(cmd, args[i]);
+    }
+    if (!nob_cmd_run_sync_and_reset(cmd)) {
+        exit(EXIT_FAILURE);
+    }
+}
+
+#define compile(cmd, output, ...) \
+    _compile(cmd, output, \
+             ((const char*[]){__VA_ARGS__}), \
+             (sizeof((const char*[]){__VA_ARGS__})/sizeof(const char*)))
+static void
+_compile(Nob_Cmd *cmd, const char *output, const char **args, size_t count)
 {
     add_cc_from_env_or(cmd, "cc");
     nob_cmd_append(cmd, "-std=c99", "-pedantic",
@@ -36,45 +56,7 @@ _compile(Nob_Cmd *cmd, const char *output, ...)
                    "-Wall", "-Wextra",
                    "-Werror");
     nob_cc_output(cmd, output);
-
-    va_list ap;
-    va_start(ap, output);
-    for (;;) {
-        const char *arg = va_arg(ap, const char *);
-        if (arg == NULL) {
-            break;
-        }
-        nob_cc_inputs(cmd, arg);
-    }
-    va_end(ap);
-    if (!nob_cmd_run_sync_and_reset(cmd)) {
-        exit(EXIT_FAILURE);
-    }
-}
-
-#define run(cmd, ...) _run(cmd, __VA_ARGS__, NULL)
-static void
-_run(Nob_Cmd *cmd, ...)
-{
-    va_list ap;
-    va_start(ap, cmd);
-    const char *progname = va_arg(ap, const char *);
-    if (progname == NULL) {
-        fprintf(stderr, "[ERROR] run should be called with at least two argument: cmd and program\n");
-        exit(EXIT_FAILURE);
-    }
-    nob_cmd_append(cmd, progname);
-    for (;;) {
-        const char *arg = va_arg(ap, const char *);
-        if (arg == NULL) {
-            break;
-        }
-        nob_cmd_append(cmd, arg);
-    }
-    va_end(ap);
-    if (!nob_cmd_run_sync_and_reset(cmd)) {
-        exit(EXIT_FAILURE);
-    }
+    _run(cmd, args, count);
 }
 
 int
