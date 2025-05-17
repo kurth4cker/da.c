@@ -43,3 +43,26 @@ jobs:
 
     - name: Run Tests
       run: ./nob test
+
+  build-windows:
+    name: "windows-latest / cl"
+    runs-on: windows-latest
+
+    env:
+      CC: cl
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+
+    - name: Setup MSVC Environment
+      uses: ilammy/msvc-dev-cmd@v1
+
+    - name: Bootstrap nob
+      run: cl /nologo /Fe:nob nob.c
+
+    - name: Build
+      run: ./nob
+
+    - name: Run Tests
+      run: ./nob test

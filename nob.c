@@ -47,17 +47,32 @@ _run(Nob_Cmd *cmd, const char **args, size_t count)
     _compile(cmd, output, \
              ((const char*[]){__VA_ARGS__}), \
              (sizeof((const char*[]){__VA_ARGS__})/sizeof(const char*)))
+#ifdef _WIN32
+static void
+_compile(Nob_Cmd *cmd, const char *output, const char **args, size_t count)
+{
+    add_cc_from_env_or(cmd, "cl");
+    nob_cmd_append(cmd, "/nologo", "/std:c11");
+    nob_cmd_append(cmd, "/Wall");
+    // disabled by default, there are warnings I do not know what they means
+    // nob_cmd_append(cmd, "/WX");
+    nob_cc_output(cmd, output);
+    _run(cmd, args, count);
+}
+#else
 static void
 _compile(Nob_Cmd *cmd, const char *output, const char **args, size_t count)
 {
     add_cc_from_env_or(cmd, "cc");
     nob_cmd_append(cmd, "-std=c99", "-pedantic",
                    "-g",
-                   "-Wall", "-Wextra",
+                   "-Wall",
+                   "-Wextra",
                    "-Werror");
     nob_cc_output(cmd, output);
     _run(cmd, args, count);
 }
+#endif // _WIN32
 
 int
 main(int argc, char **argv)
