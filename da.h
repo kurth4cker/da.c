@@ -15,6 +15,7 @@ typedef struct {
 
 bool da_init_if_needed(Da_Generic *arr, size_t objsize);
 bool da_grow_if_needed(Da_Generic *arr, size_t objsize);
+void da_destroy(Da_Generic *arr);
 
 typedef struct {
     size_t size, capacity;

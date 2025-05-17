@@ -37,6 +37,14 @@ bool da_grow_if_needed(Da_Generic *arr, size_t objsize)
     return true;
 }
 
+void da_destroy(Da_Generic *arr)
+{
+    arr->capacity = 0;
+    if (arr->data != NULL) {
+        free(arr->data);
+    }
+}
+
 bool da_int_append(Da_Int *arr, int val)
 {
     if (!da_init_if_needed((Da_Generic *)arr, sizeof(*arr->data)) ||

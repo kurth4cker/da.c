@@ -24,6 +24,7 @@ main(void)
         assert(arr.size == limit);
         assert(arr.data != NULL);
         assert(arr.size <= arr.capacity);
+        da_destroy((Da_Generic *)&arr);
     }
 
     {
@@ -36,5 +37,6 @@ main(void)
         assert(arr.size == limit);
         assert(arr.data != NULL);
         assert(arr.size <= arr.capacity);
+        da_destroy((Da_Generic *)&arr);
     }
 }
