@@ -66,5 +66,10 @@ main(int argc, char **argv)
 
     Nob_Cmd cmd = { 0 };
     compile(&cmd, "example","da.c", "example.c");
-    run(&cmd, "./example");
+
+    for (int i = 0; i < argc; i++) {
+        if (strcmp(argv[i], "test") == 0) {
+            run(&cmd, "./example");
+        }
+    }
 }
