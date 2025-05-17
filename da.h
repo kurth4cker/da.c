@@ -10,10 +10,17 @@
 
 typedef struct {
     size_t size, capacity;
+    void *data;
+} Da_Generic;
+
+bool da_init_if_needed(Da_Generic *arr, size_t objsize);
+bool da_grow_if_needed(Da_Generic *arr, size_t objsize);
+
+typedef struct {
+    size_t size, capacity;
     int *data;
 } Da_Int;
 bool da_int_append(Da_Int *arr, int val);
-bool da_int_init(Da_Int *arr);
 
 typedef struct {
     size_t size, capacity;

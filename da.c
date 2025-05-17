@@ -6,13 +6,7 @@
 
 #include "da.h"
 
-typedef struct {
-    size_t size, capacity;
-    void *data;
-} Array;
-
-static bool
-init_if_needed(Array *arr, size_t objsize)
+bool da_init_if_needed(Da_Generic *arr, size_t objsize)
 {
     if (arr->data != NULL) {
         return true;
@@ -26,8 +20,7 @@ init_if_needed(Array *arr, size_t objsize)
     return true;
 }
 
-static bool
-grow_if_needed(Array *arr, size_t objsize)
+bool da_grow_if_needed(Da_Generic *arr, size_t objsize)
 {
     assert(arr->data != NULL);
     assert(arr->capacity > 0);
@@ -44,13 +37,21 @@ grow_if_needed(Array *arr, size_t objsize)
     return true;
 }
 
+bool da_int_append(Da_Int *arr, int val)
+{
+    if (!da_init_if_needed((Da_Generic *)arr, sizeof(*arr->data)) ||
+        !da_grow_if_needed((Da_Generic *)arr, sizeof(*arr->data))) {
+            return false;
+    }
+    arr->data[arr->size] = val;
+    arr->size++;
+    return true;
+}
+
 bool da_size_append(Da_Size *arr, size_t val)
 {
-    assert(offsetof(Da_Size, data) == offsetof(Array, data));
-    assert(offsetof(Da_Size, size) == offsetof(Array, size));
-    assert(offsetof(Da_Size, capacity) == offsetof(Array, capacity));
-    if (!init_if_needed((Array *)arr, sizeof(*arr->data)) ||
-        !grow_if_needed((Array *)arr, sizeof(*arr->data))) {
+    if (!da_init_if_needed((Da_Generic *)arr, sizeof(*arr->data)) ||
+        !da_grow_if_needed((Da_Generic *)arr, sizeof(*arr->data))) {
             return false;
     }
     arr->data[arr->size] = val;
@@ -60,8 +61,8 @@ bool da_size_append(Da_Size *arr, size_t val)
 
 bool da_str_append(Da_Str *arr, const char *val)
 {
-    if (!init_if_needed((Array *)arr, sizeof(*arr->data)) ||
-        !grow_if_needed((Array *)arr, sizeof(*arr->data))) {
+    if (!da_init_if_needed((Da_Generic *)arr, sizeof(*arr->data)) ||
+        !da_grow_if_needed((Da_Generic *)arr, sizeof(*arr->data))) {
             return false;
     }
     arr->data[arr->size] = val;
