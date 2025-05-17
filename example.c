@@ -3,6 +3,7 @@
 
 #include <stdio.h>
 #include <assert.h>
+#include <string.h>
 
 #include "da.h"
 
@@ -38,5 +39,17 @@ main(void)
         assert(arr.data != NULL);
         assert(arr.size <= arr.capacity);
         da_destroy((Da_Generic *)&arr);
+    }
+
+    {
+        Da_Str arr = { 0 };
+        da_str_append(&arr, "hello");
+        da_str_append(&arr, "world");
+
+        assert(arr.data != NULL);
+        assert(arr.capacity > arr.size);
+        assert(arr.size == 2);
+        assert(strcmp(arr.data[0], "hello") == 0);
+        assert(strcmp(arr.data[1], "world") == 0);
     }
 }

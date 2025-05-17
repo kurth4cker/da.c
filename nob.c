@@ -66,8 +66,5 @@ main(int argc, char **argv)
 
     Nob_Cmd cmd = { 0 };
     compile(&cmd, "example","da.c", "example.c");
-    compile(&cmd, "test-multiword-types", "da.c", "test-multiword-types.c");
-
-	run(&cmd, "./example");
-	run(&cmd, "./test-multiword-types");
+    run(&cmd, "./example");
 }
