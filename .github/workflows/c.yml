@@ -23,7 +23,10 @@ jobs:
         cc:
           - gcc
           - clang
-          - clang-cl
+        include:
+          - os: ubuntu-latest
+            cc: clang-cl
+            install: sudo apt-get update && apt-get install -y clang-tools
 
     env:
       CC: ${{ matrix.cc }}
