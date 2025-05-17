@@ -40,3 +40,6 @@ jobs:
 
     - name: Build
       run: ./nob
+
+    - name: Run Tests
+      run: ./nob test
