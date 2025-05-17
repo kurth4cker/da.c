@@ -60,6 +60,11 @@ bool da_size_append(Da_Size *arr, size_t val)
 
 bool da_str_append(Da_Str *arr, const char *val)
 {
-    (void)arr, (void)val;
+    if (!init_if_needed((Array *)arr, sizeof(*arr->data)) ||
+        !grow_if_needed((Array *)arr, sizeof(*arr->data))) {
+            return false;
+    }
+    arr->data[arr->size] = val;
+    arr->size++;
     return true;
 }

@@ -3,6 +3,7 @@
 
 #include <stdio.h>
 #include <assert.h>
+#include <string.h>
 
 #include "da.h"
 
@@ -13,7 +14,9 @@ main(void)
     da_str_append(&arr, "hello");
     da_str_append(&arr, "world");
 
-    for (size_t i = 0; i < arr.size; i++) {
-        printf("%s\n", arr.data[i]);
-    }
+    assert(arr.data != NULL);
+    assert(arr.capacity > arr.size);
+    assert(arr.size == 2);
+    assert(strcmp(arr.data[0], "hello") == 0);
+    assert(strcmp(arr.data[1], "world") == 0);
 }
