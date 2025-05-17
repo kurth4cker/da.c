@@ -8,30 +8,23 @@
 #include <stddef.h>
 #include <stdbool.h>
 
-#define Da(type) Da_##type
+typedef struct {
+    size_t size, capacity;
+    int *data;
+} Da_Int;
+bool da_int_append(Da_Int *arr, int val);
+bool da_int_init(Da_Int *arr);
 
-#define da__implement_append(type)                                                       \
-bool da_append_##type(Da(type) *arr, type val)                                           \
-{                                                                                        \
-	if (!da__init_if_needed((void **)&arr->data, &arr->capacity, sizeof(type)) ||             \
-	    !da__grow_if_needed((void **)&arr->data, &arr->capacity, arr->size, sizeof(type))) {  \
-		    return false;                                                        \
-	}                                                                                \
-	arr->data[arr->size] = val;                                                      \
-	arr->size++;                                                                     \
-	return true;                                                                     \
-}
+typedef struct {
+    size_t size, capacity;
+    size_t *data;
+} Da_Size;
+bool da_size_append(Da_Size *arr, size_t val);
 
-#define da_implement(type)       \
-typedef struct {                 \
-	size_t size, capacity;   \
-	type *data;              \
-} Da(type);                      \
-da__implement_append(type)
-
-#define da_append(type, arr, val) da_append_##type(arr, val)
-
-bool da__init_if_needed(void **data, size_t *capacity, size_t objsize);
-bool da__grow_if_needed(void **data, size_t *capacity, size_t size, size_t objsize);
+typedef struct {
+    size_t size, capacity;
+    const char **data;
+} Da_Str;
+bool da_str_append(Da_Str *arr, const char *val);
 
 #endif // DA_H_INCLUDED

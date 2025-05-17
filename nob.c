@@ -26,6 +26,7 @@ main(int argc, char **argv)
     Nob_Cmd cmd = { 0 };
     add_cc_from_env_or(&cmd, "cc");
     nob_cmd_append(&cmd, "-std=c99", "-pedantic",
+                   "-g",
                    "-Wall", "-Wextra",
                    "-Werror");
     nob_cc_output(&cmd, "example");
@@ -33,8 +34,22 @@ main(int argc, char **argv)
     if (!nob_cmd_run_sync_and_reset(&cmd)) {
         exit(EXIT_FAILURE);
     }
-
     nob_cmd_append(&cmd, "./example");
+    if (!nob_cmd_run_sync_and_reset(&cmd)) {
+        exit(EXIT_FAILURE);
+    }
+
+    add_cc_from_env_or(&cmd, "cc");
+    nob_cmd_append(&cmd, "-std=c99", "-pedantic",
+                   "-g",
+                   "-Wall", "-Wextra",
+                   "-Werror");
+    nob_cc_output(&cmd, "test-multiword-types");
+    nob_cc_inputs(&cmd, "da.c", "test-multiword-types.c");
+    if (!nob_cmd_run_sync_and_reset(&cmd)) {
+        exit(EXIT_FAILURE);
+    }
+    nob_cmd_append(&cmd, "./test-multiword-types");
     if (!nob_cmd_run_sync_and_reset(&cmd)) {
         exit(EXIT_FAILURE);
     }
