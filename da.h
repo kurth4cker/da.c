@@ -10,15 +10,6 @@
 
 typedef struct {
     size_t size, capacity;
-    void *data;
-} Da_Generic;
-
-bool da_init_if_needed(Da_Generic *arr, size_t objsize);
-bool da_grow_if_needed(Da_Generic *arr, size_t objsize);
-void da_destroy(Da_Generic *arr);
-
-typedef struct {
-    size_t size, capacity;
     int *data;
 } Da_Int;
 bool da_int_append(Da_Int *arr, int val);
@@ -34,5 +25,14 @@ typedef struct {
     const char **data;
 } Da_Str;
 bool da_str_append(Da_Str *arr, const char *val);
+
+typedef struct {
+    size_t size, capacity;
+    void *data;
+} Da_Generic;
+
+bool da_init_if_needed(Da_Generic *arr, size_t objsize);
+bool da_grow_if_needed(Da_Generic *arr, size_t objsize);
+void da_destroy(Da_Generic *arr);
 
 #endif // DA_H_INCLUDED
