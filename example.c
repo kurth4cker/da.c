@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <assert.h>
 #include <string.h>
+#include <math.h>
 
 #include "da.h"
 
@@ -25,6 +26,19 @@ main(void)
         assert(arr.size == limit);
         assert(arr.data != NULL);
         assert(arr.size <= arr.capacity);
+        da_destroy((Da_Generic *)&arr);
+    }
+
+    {
+        Da_Double arr = { 0 };
+        for (size_t i = 0; i < limit; i++) {
+            da_double_append(&arr, i / 10.0);
+        }
+
+        assert(arr.size == limit);
+        assert(arr.data != NULL);
+        assert(arr.size <= arr.capacity);
+        // destroy array
         da_destroy((Da_Generic *)&arr);
     }
 
