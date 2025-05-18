@@ -57,7 +57,12 @@ _compile(Nob_Cmd *cmd, const char *output, const char **args, size_t count)
     // disabled by default, there are warnings I do not know what they means
     // nob_cmd_append(cmd, "/WX");
     nob_cc_output(cmd, output);
-    _run(cmd, args, count);
+    for (size_t i = 0; i < count; i++) {
+        nob_cmd_append(cmd, args[i]);
+    }
+    if (!nob_cmd_run_sync_and_reset(cmd)) {
+        exit(EXIT_FAILURE);
+    }
 }
 #else
 static void
@@ -70,7 +75,12 @@ _compile(Nob_Cmd *cmd, const char *output, const char **args, size_t count)
                    "-Wextra",
                    "-Werror");
     nob_cc_output(cmd, output);
-    _run(cmd, args, count);
+    for (size_t i = 0; i < count; i++) {
+        nob_cmd_append(cmd, args[i]);
+    }
+    if (!nob_cmd_run_sync_and_reset(cmd)) {
+        exit(EXIT_FAILURE);
+    }
 }
 #endif // _WIN32
 
