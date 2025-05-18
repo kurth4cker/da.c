@@ -32,13 +32,17 @@ typedef struct {
 } Da_Str;
 bool da_str_append(Da_Str *arr, const char *val);
 
+#define da_init_if_needed(arr) da_init_generic_if_needed((Da_Generic *)(arr), sizeof(*(arr)->data))
+#define da_grow_if_needed(arr) da_grow_generic_if_needed((Da_Generic *)(arr), sizeof(*(arr)->data))
+#define da_destroy(arr) da_destroy_generic((Da_Generic *)(arr))
+
 typedef struct {
     size_t size, capacity;
     void *data;
 } Da_Generic;
 
-bool da_init_if_needed(Da_Generic *arr, size_t objsize);
-bool da_grow_if_needed(Da_Generic *arr, size_t objsize);
-void da_destroy(Da_Generic *arr);
+bool da_init_generic_if_needed(Da_Generic *arr, size_t objsize);
+bool da_grow_generic_if_needed(Da_Generic *arr, size_t objsize);
+void da_destroy_generic(Da_Generic *arr);
 
 #endif // DA_H_INCLUDED
