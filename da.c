@@ -56,6 +56,17 @@ bool da_int_append(Da_Int *arr, int val)
     return true;
 }
 
+bool da_double_append(Da_Double *arr, double val)
+{
+    if (!da_init_if_needed((Da_Generic *)arr, sizeof(*arr->data)) ||
+        !da_grow_if_needed((Da_Generic *)arr, sizeof(*arr->data))) {
+            return false;
+    }
+    arr->data[arr->size] = val;
+    arr->size++;
+    return true;
+}
+
 bool da_size_append(Da_Size *arr, size_t val)
 {
     if (!da_init_if_needed((Da_Generic *)arr, sizeof(*arr->data)) ||

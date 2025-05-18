@@ -16,6 +16,12 @@ bool da_int_append(Da_Int *arr, int val);
 
 typedef struct {
     size_t size, capacity;
+    double *data;
+} Da_Double;
+bool da_double_append(Da_Double *arr, double val);
+
+typedef struct {
+    size_t size, capacity;
     size_t *data;
 } Da_Size;
 bool da_size_append(Da_Size *arr, size_t val);
