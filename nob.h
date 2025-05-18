@@ -1,4 +1,4 @@
-/* nob - v1.20.2 - Public Domain - https://github.com/tsoding/nob.h
+/* nob - v1.20.6 - Public Domain - https://github.com/tsoding/nob.h
 
    This library is the next generation of the [NoBuild](https://github.com/tsoding/nobuild) idea.
 
@@ -151,7 +151,8 @@
       for instance will retain their prefix even if NOB_STRIP_PREFIX is enabled. Notable exception is the
       nob_log() function. Stripping away the prefix results in log() which was historically always referring
       to the natural logarithmic function that is already defined in math.h. So there is no reason to strip
-      off the prefix for nob_log().
+      off the prefix for nob_log(). Another exception is nob_rename() which collides with the widely known
+      POSIX function rename(2) if you strip the prefix off.
 
       The prefixes are stripped off only on the level of preprocessor. The names of the functions in the
       compiled object file will still retain the `nob_` prefix. Keep that in mind when you FFI with nob.h
@@ -212,11 +213,15 @@
 #endif
 
 #if defined(__GNUC__) || defined(__clang__)
-// https://gcc.gnu.org/onlinedocs/gcc-4.7.2/gcc/Function-Attributes.html
-#define NOB_PRINTF_FORMAT(STRING_INDEX, FIRST_TO_CHECK) __attribute__ ((format (printf, STRING_INDEX, FIRST_TO_CHECK)))
+//   https://gcc.gnu.org/onlinedocs/gcc-4.7.2/gcc/Function-Attributes.html
+#    ifdef __MINGW_PRINTF_FORMAT
+#        define NOB_PRINTF_FORMAT(STRING_INDEX, FIRST_TO_CHECK) __attribute__ ((format (__MINGW_PRINTF_FORMAT, STRING_INDEX, FIRST_TO_CHECK)))
+#    else
+#        define NOB_PRINTF_FORMAT(STRING_INDEX, FIRST_TO_CHECK) __attribute__ ((format (printf, STRING_INDEX, FIRST_TO_CHECK)))
+#    endif // __MINGW_PRINTF_FORMAT
 #else
-// TODO: implement NOB_PRINTF_FORMAT for MSVC
-#define NOB_PRINTF_FORMAT(STRING_INDEX, FIRST_TO_CHECK)
+//   TODO: implement NOB_PRINTF_FORMAT for MSVC
+#    define NOB_PRINTF_FORMAT(STRING_INDEX, FIRST_TO_CHECK)
 #endif
 
 #define NOB_UNUSED(value) (void)(value)
@@ -388,17 +393,6 @@ Nob_Fd nob_fd_open_for_read(const char *path);
 Nob_Fd nob_fd_open_for_write(const char *path);
 void nob_fd_close(Nob_Fd fd);
 
-
-// TODO: Nob_File name may lead to confusion. Should be change.
-typedef struct {
-    Nob_Fd fd;
-    const char *path;
-} Nob_File;
-
-Nob_File nob_file_open_for_read(const char *path);
-Nob_File nob_file_open_for_write(const char *path);
-void nob_file_close(Nob_File file);
-
 typedef struct {
     Nob_Proc *items;
     size_t count;
@@ -440,12 +434,6 @@ typedef struct {
     Nob_Fd *fderr;
 } Nob_Cmd_Redirect;
 
-typedef struct {
-    Nob_File *fin;
-    Nob_File *fout;
-    Nob_File *ferr;
-} Nob_Cmd_Redirect_File;
-
 // Render a string representation of a command into a string builder. Keep in mind the the
 // string builder is not NULL-terminated by default. Use nob_sb_append_null if you plan to
 // use it as a C string.
@@ -470,7 +458,6 @@ void nob_cmd_render(Nob_Cmd cmd, Nob_String_Builder *render);
 Nob_Proc nob_cmd_run_async_and_reset(Nob_Cmd *cmd);
 // Run redirected command asynchronously
 Nob_Proc nob_cmd_run_async_redirect(Nob_Cmd cmd, Nob_Cmd_Redirect redirect);
-Nob_Proc nob_cmd_run_async_redirect_file(Nob_Cmd cmd, Nob_Cmd_Redirect_File redirect);
 // Run redirected command asynchronously and set cmd.count to 0 and close all the opened files
 Nob_Proc nob_cmd_run_async_redirect_and_reset(Nob_Cmd *cmd, Nob_Cmd_Redirect redirect);
 
@@ -481,11 +468,8 @@ bool nob_cmd_run_sync(Nob_Cmd cmd);
 bool nob_cmd_run_sync_and_reset(Nob_Cmd *cmd);
 // Run redirected command synchronously
 bool nob_cmd_run_sync_redirect(Nob_Cmd cmd, Nob_Cmd_Redirect redirect);
-bool nob_cmd_run_sync_redirect_file(Nob_Cmd, Nob_Cmd_Redirect_File redirect);
 // Run redirected command synchronously and set cmd.count to 0 and close all the opened files
 bool nob_cmd_run_sync_redirect_and_reset(Nob_Cmd *cmd, Nob_Cmd_Redirect redirect);
-// Run redirected command synchronously and set cmd.count to 0 and close all the opened files
-bool nob_cmd_run_sync_redirect_file_and_reset(Nob_Cmd *cmd, Nob_Cmd_Redirect_File redirect);
 
 #ifndef NOB_TEMP_CAPACITY
 #define NOB_TEMP_CAPACITY (8*1024*1024)
@@ -528,7 +512,7 @@ bool nob_set_current_dir(const char *path);
 #endif // nob_cc
 
 #ifndef nob_cc_flags
-#  if defined(_MSC_VER)
+#  if defined(_MSC_VER) && !defined(__clang__)
 #    define nob_cc_flags(...)  // TODO: Add some cool recommended flags for MSVC (I don't really know any)
 #  else
 #    define nob_cc_flags(cmd) nob_cmd_append(cmd, "-Wall", "-Wextra")
@@ -536,7 +520,7 @@ bool nob_set_current_dir(const char *path);
 #endif // nob_cc_output
 
 #ifndef nob_cc_output
-#  if defined(_MSC_VER)
+#  if defined(_MSC_VER) && !defined(__clang__)
 #    define nob_cc_output(cmd, output_path) nob_cmd_append(cmd, nob_temp_sprintf("/Fe:%s", (output_path)))
 #  else
 #    define nob_cc_output(cmd, output_path) nob_cmd_append(cmd, "-o", (output_path))
@@ -904,8 +888,63 @@ void nob_cmd_render(Nob_Cmd cmd, Nob_String_Builder *render)
     }
 }
 
-static Nob_Proc nob__spawn_with_pipe(Nob_Cmd cmd, Nob_Cmd_Redirect redirect)
+#ifdef _WIN32
+// https://learn.microsoft.com/en-gb/archive/blogs/twistylittlepassagesallalike/everyone-quotes-command-line-arguments-the-wrong-way
+static void nob__win32_cmd_quote(Nob_Cmd cmd, Nob_String_Builder *quoted)
 {
+    for (size_t i = 0; i < cmd.count; ++i) {
+        const char *arg = cmd.items[i];
+        if (arg == NULL) break;
+        size_t len = strlen(arg);
+        if (i > 0) nob_da_append(quoted, ' ');
+        if (len != 0 && NULL == strpbrk(arg, " \t\n\v\"")) {
+            // no need to quote
+            nob_da_append_many(quoted, arg, len);
+        } else {
+            // we need to escape:
+            // 1. double quotes in the original arg
+            // 2. consequent backslashes before a double quote
+            size_t backslashes = 0;
+            nob_da_append(quoted, '\"');
+            for (size_t j = 0; j < len; ++j) {
+                char x = arg[j];
+                if (x == '\\') {
+                    backslashes += 1;
+                } else {
+                    if (x == '\"') {
+                        // escape backslashes (if any) and the double quote
+                        for (size_t k = 0; k < 1+backslashes; ++k) {
+                            nob_da_append(quoted, '\\');
+                        }
+                    }
+                    backslashes = 0;
+                }
+                nob_da_append(quoted, x);
+            }
+            // escape backslashes (if any)
+            for (size_t k = 0; k < backslashes; ++k) {
+                nob_da_append(quoted, '\\');
+            }
+            nob_da_append(quoted, '\"');
+        }
+    }
+}
+#endif
+
+Nob_Proc nob_cmd_run_async_redirect(Nob_Cmd cmd, Nob_Cmd_Redirect redirect)
+{
+    if (cmd.count < 1) {
+        nob_log(NOB_ERROR, "Could not run empty command");
+        return NOB_INVALID_PROC;
+    }
+
+    Nob_String_Builder sb = {0};
+    nob_cmd_render(cmd, &sb);
+    nob_sb_append_null(&sb);
+    nob_log(NOB_INFO, "CMD: %s", sb.items);
+    nob_sb_free(sb);
+    memset(&sb, 0, sizeof(sb));
+
 #ifdef _WIN32
     // https://docs.microsoft.com/en-us/windows/win32/procthread/creating-a-child-process-with-redirected-input-and-output
 
@@ -923,9 +962,7 @@ static Nob_Proc nob__spawn_with_pipe(Nob_Cmd cmd, Nob_Cmd_Redirect redirect)
     PROCESS_INFORMATION piProcInfo;
     ZeroMemory(&piProcInfo, sizeof(PROCESS_INFORMATION));
 
-    // TODO: use a more reliable rendering of the command instead of cmd_render
-    // cmd_render is for logging primarily
-    nob_cmd_render(cmd, &sb);
+    nob__win32_cmd_quote(cmd, &sb);
     nob_sb_append_null(&sb);
     BOOL bSuccess = CreateProcessA(NULL, sb.items, NULL, NULL, TRUE, 0, NULL, NULL, &siStartInfo, &piProcInfo);
     nob_sb_free(sb);
@@ -982,60 +1019,6 @@ static Nob_Proc nob__spawn_with_pipe(Nob_Cmd cmd, Nob_Cmd_Redirect redirect)
 
     return cpid;
 #endif
-}
-
-Nob_Proc nob_cmd_run_async_redirect(Nob_Cmd cmd, Nob_Cmd_Redirect redirect)
-{
-    if (cmd.count < 1) {
-        nob_log(NOB_ERROR, "Could not run empty command");
-        return NOB_INVALID_PROC;
-    }
-
-    Nob_String_Builder sb = {0};
-    nob_cmd_render(cmd, &sb);
-    nob_sb_append_null(&sb);
-    nob_log(NOB_INFO, "CMD: %s", sb.items);
-    nob_sb_free(sb);
-    memset(&sb, 0, sizeof(sb));
-
-    return nob__spawn_with_pipe(cmd, redirect);
-}
-
-Nob_Proc nob_cmd_run_async_redirect_file(Nob_Cmd cmd, Nob_Cmd_Redirect_File redirect)
-{
-    if (cmd.count < 1) {
-        nob_log(NOB_ERROR, "Could not run empty command");
-        return NOB_INVALID_PROC;
-    }
-
-    Nob_String_Builder sb = {0};
-    nob_cmd_render(cmd, &sb);
-    if (redirect.fin && redirect.fin->path) {
-        nob_sb_appendf(&sb, " < %s", redirect.fin->path);
-    }
-    if (redirect.fout && redirect.fout->path) {
-        nob_sb_appendf(&sb, " > %s", redirect.fout->path);
-    }
-    if (redirect.ferr && redirect.ferr->path) {
-        nob_sb_appendf(&sb, " 2> %s", redirect.ferr->path);
-    }
-    nob_sb_append_null(&sb);
-    nob_log(NOB_INFO, "CMD: %s", sb.items);
-    nob_sb_free(sb);
-    memset(&sb, 0, sizeof(sb));
-
-    Nob_Cmd_Redirect fds = { 0 };
-    if (redirect.fin) {
-        fds.fdin = &redirect.fin->fd;
-    }
-    if (redirect.fout) {
-        fds.fdout = &redirect.fout->fd;
-    }
-    if (redirect.ferr) {
-        fds.fderr = &redirect.ferr->fd;
-    }
-
-    return nob__spawn_with_pipe(cmd, fds);
 }
 
 Nob_Proc nob_cmd_run_async_and_reset(Nob_Cmd *cmd)
@@ -1141,28 +1124,6 @@ void nob_fd_close(Nob_Fd fd)
 #endif // _WIN32
 }
 
-Nob_File nob_file_open_for_read(const char *path)
-{
-    Nob_File file = { 0 };
-    file.path = path;
-    file.fd = nob_fd_open_for_read(path);
-    return file;
-}
-
-Nob_File nob_file_open_for_write(const char *path)
-{
-    Nob_File file = { 0 };
-    file.path = path;
-    file.fd = nob_fd_open_for_write(path);
-    return file;
-}
-
-void nob_file_close(Nob_File file)
-{
-    nob_fd_close(file.fd);
-    file.path = NULL;
-}
-
 bool nob_procs_wait(Nob_Procs procs)
 {
     bool success = true;
@@ -1254,13 +1215,6 @@ bool nob_cmd_run_sync_redirect(Nob_Cmd cmd, Nob_Cmd_Redirect redirect)
     return nob_proc_wait(p);
 }
 
-bool nob_cmd_run_sync_redirect_file(Nob_Cmd cmd, Nob_Cmd_Redirect_File redirect)
-{
-    Nob_Proc p = nob_cmd_run_async_redirect_file(cmd, redirect);
-    if (p == NOB_INVALID_PROC) return false;
-    return nob_proc_wait(p);
-}
-
 bool nob_cmd_run_sync(Nob_Cmd cmd)
 {
     Nob_Proc p = nob_cmd_run_async(cmd);
@@ -1290,29 +1244,6 @@ bool nob_cmd_run_sync_redirect_and_reset(Nob_Cmd *cmd, Nob_Cmd_Redirect redirect
     if (redirect.fderr) {
         nob_fd_close(*redirect.fderr);
         *redirect.fderr = NOB_INVALID_FD;
-    }
-    return p;
-}
-
-bool nob_cmd_run_sync_redirect_file_and_reset(Nob_Cmd *cmd, Nob_Cmd_Redirect_File redirect)
-{
-    const Nob_File NOB_INVALID_FILE = {
-        .fd = NOB_INVALID_FD,
-        .path = NULL,
-    };
-    bool p = nob_cmd_run_sync_redirect_file(*cmd, redirect);
-    cmd->count = 0;
-    if (redirect.fin && redirect.fin->fd) {
-        nob_file_close(*redirect.fin);
-        *redirect.fin = NOB_INVALID_FILE;
-    }
-    if (redirect.fout && redirect.fout->fd) {
-        nob_file_close(*redirect.fout);
-        *redirect.fout = NOB_INVALID_FILE;
-    }
-    if (redirect.ferr && redirect.ferr->fd) {
-        nob_file_close(*redirect.ferr);
-        *redirect.ferr = NOB_INVALID_FILE;
     }
     return p;
 }
@@ -2083,7 +2014,8 @@ int closedir(DIR *dirp)
         #define temp_save nob_temp_save
         #define temp_rewind nob_temp_rewind
         #define path_name nob_path_name
-        #define rename nob_rename
+        // NOTE: rename(2) is widely known POSIX function. We never wanna collide with it.
+        // #define rename nob_rename
         #define needs_rebuild nob_needs_rebuild
         #define needs_rebuild1 nob_needs_rebuild1
         #define file_exists nob_file_exists
@@ -2109,6 +2041,10 @@ int closedir(DIR *dirp)
 /*
    Revision history:
 
+     1.20.6 (2025-05-16) Never strip nob_* suffix from nob_rename (By @rexim)
+     1.20.5 (2025-05-16) NOB_PRINTF_FORMAT() support for MinGW (By @KillerxDBr)
+     1.20.4 (2025-05-16) More reliable rendering of the Windows command (By @vylsaz)
+     1.20.3 (2025-05-16) Add check for __clang__ along with _MSC_VER checks (By @nashiora)
      1.20.2 (2025-04-24) Report the program name that failed to start up in nob_cmd_run_async_redirect() (By @rexim)
      1.20.1 (2025-04-16) Use vsnprintf() in nob_sb_appendf() instead of vsprintf() (By @LainLayer)
      1.20.0 (2025-04-16) Introduce nob_cc(), nob_cc_flags(), nob_cc_inputs(), nob_cc_output() macros (By @rexim)
