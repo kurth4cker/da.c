@@ -8,6 +8,35 @@
 
 #include "da.h"
 
+typedef struct {
+    const char *name;
+    const char *language;
+} Project;
+
+static inline Project project(const char *name, const char *language)
+{
+    Project p = {
+        .name = name,
+        .language = language,
+    };
+    return p;
+}
+
+typedef struct {
+    size_t size, capacity;
+    Project *data;
+} Project_Array;
+
+static bool append_project(Project_Array *arr, Project val)
+{
+    if (!da_init_if_needed(arr) || !da_grow_if_needed(arr)) {
+        return false;
+    }
+    arr->data[arr->size] = val;
+    arr->size++;
+    return true;
+}
+
 int
 main(void)
 {
@@ -65,5 +94,16 @@ main(void)
         assert(arr.size == 2);
         assert(strcmp(arr.data[0], "hello") == 0);
         assert(strcmp(arr.data[1], "world") == 0);
+    }
+
+    {
+        Project_Array arr = { 0 };
+        append_project(&arr, project("da.c", "C"));
+        append_project(&arr, project("sample-go", "Go"));
+
+        assert(arr.data != NULL);
+        assert(arr.capacity > arr.size);
+        assert(arr.size == 2);
+        assert(strcmp(arr.data[1].name, "sample-go") == 0);
     }
 }
