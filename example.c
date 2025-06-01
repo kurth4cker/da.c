@@ -22,10 +22,7 @@ static inline Project project(const char *name, const char *language)
     return p;
 }
 
-typedef struct {
-    size_t size, capacity;
-    Project *data;
-} Project_Array;
+da_define_struct(Project_Array, Project);
 
 static bool append_project(Project_Array *arr, Project val)
 {
