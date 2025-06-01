@@ -8,24 +8,18 @@
 #include <stddef.h>
 #include <stdbool.h>
 
+#define da_define_struct(Array_Type, Type)     \
+    typedef struct {                           \
+        size_t size, capacity;                 \
+        Type *data;                            \
+    } Array_Type
+
 // Pre defined array types. Order of values should be same. size, capacity and
 // data. Names does not matter.
-typedef struct da_int {
-    size_t size, capacity;
-    int *data;
-} Da_Int;
-typedef struct da_double {
-    size_t size, capacity;
-    double *data;
-} Da_Double;
-typedef struct da_size {
-    size_t size, capacity;
-    size_t *data;
-} Da_Size;
-typedef struct da_str {
-    size_t size, capacity;
-    const char **data;
-} Da_Str;
+da_define_struct(Da_Int, int);
+da_define_struct(Da_Double, double);
+da_define_struct(Da_Size, size_t);
+da_define_struct(Da_Str, const char *);
 
 // append given value to the end of array, initializes if necessary, grows if necessary.
 bool da_int_append(Da_Int *arr, int val);
@@ -39,10 +33,7 @@ bool da_str_append(Da_Str *arr, const char *val);
 #define da_grow_if_needed(arr)    da_grow_generic_if_needed((Da_Generic *)(arr), sizeof(*(arr)->data))
 #define da_destroy(arr)           da_destroy_generic((Da_Generic *)(arr))
 
-typedef struct {
-    size_t size, capacity;
-    void *data;
-} Da_Generic;
+da_define_struct(Da_Generic, void);
 
 bool da_init_generic_if_needed(Da_Generic *arr, size_t objsize);
 bool da_grow_generic_if_needed(Da_Generic *arr, size_t objsize);
