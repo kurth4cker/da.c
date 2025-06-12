@@ -6,7 +6,7 @@
 
 #include "da.h"
 
-bool da_init_generic_if_needed(Da_Generic *arr, size_t objsize)
+bool da_generic_init_if_needed(Da_Generic *arr, size_t objsize)
 {
     if (arr->data != NULL) {
         return true;
@@ -20,7 +20,7 @@ bool da_init_generic_if_needed(Da_Generic *arr, size_t objsize)
     return true;
 }
 
-bool da_grow_generic_if_needed(Da_Generic *arr, size_t objsize)
+bool da_generic_grow_if_needed(Da_Generic *arr, size_t objsize)
 {
     assert(arr->data != NULL);
     assert(arr->capacity > 0);
@@ -37,7 +37,7 @@ bool da_grow_generic_if_needed(Da_Generic *arr, size_t objsize)
     return true;
 }
 
-void da_destroy_generic(Da_Generic *arr)
+void da_generic_destroy(Da_Generic *arr)
 {
     arr->capacity = 0;
     if (arr->data != NULL) {
@@ -45,7 +45,7 @@ void da_destroy_generic(Da_Generic *arr)
     }
 }
 
-bool da_int_append(Da_Int *arr, int val)
+bool da_append_int(Da_Int *arr, int val)
 {
     if (!da_init_if_needed(arr) ||
         !da_grow_if_needed(arr)) {
@@ -56,7 +56,7 @@ bool da_int_append(Da_Int *arr, int val)
     return true;
 }
 
-bool da_double_append(Da_Double *arr, double val)
+bool da_append_double(Da_Double *arr, double val)
 {
     if (!da_init_if_needed(arr) ||
         !da_grow_if_needed(arr)) {
@@ -67,7 +67,7 @@ bool da_double_append(Da_Double *arr, double val)
     return true;
 }
 
-bool da_size_append(Da_Size *arr, size_t val)
+bool da_append_size(Da_Size *arr, size_t val)
 {
     if (!da_init_if_needed(arr) ||
         !da_grow_if_needed(arr)) {
@@ -78,7 +78,7 @@ bool da_size_append(Da_Size *arr, size_t val)
     return true;
 }
 
-bool da_str_append(Da_Str *arr, const char *val)
+bool da_append_str(Da_Str *arr, const char *val)
 {
     if (!da_init_if_needed(arr) ||
         !da_grow_if_needed(arr)) {

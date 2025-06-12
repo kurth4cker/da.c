@@ -45,46 +45,46 @@ main(void)
     {
         Da_Size arr = { 0 };
         for (size_t i = 0; i < limit; i++) {
-            da_size_append(&arr, i);
+            da_append_size(&arr, i);
             assert(arr.data[i] == i);
         }
 
         assert(arr.size == limit);
         assert(arr.data != NULL);
         assert(arr.size <= arr.capacity);
-        da_destroy((Da_Generic *)&arr);
+        da_destroy(&arr);
     }
 
     {
         Da_Double arr = { 0 };
         for (size_t i = 0; i < limit; i++) {
-            da_double_append(&arr, i / 10.0);
+            da_append_double(&arr, i / 10.0);
         }
 
         assert(arr.size == limit);
         assert(arr.data != NULL);
         assert(arr.size <= arr.capacity);
         // destroy array
-        da_destroy((Da_Generic *)&arr);
+        da_destroy(&arr);
     }
 
     {
         Da_Int arr = { 0 };
         for (int i = 0; i < (int)limit; i++) {
-            da_int_append(&arr, i);
+            da_append_int(&arr, i);
             assert(arr.data[i] == i);
         }
 
         assert(arr.size == limit);
         assert(arr.data != NULL);
         assert(arr.size <= arr.capacity);
-        da_destroy((Da_Generic *)&arr);
+        da_destroy(&arr);
     }
 
     {
         Da_Str arr = { 0 };
-        da_str_append(&arr, "hello");
-        da_str_append(&arr, "world");
+        da_append_str(&arr, "hello");
+        da_append_str(&arr, "world");
 
         assert(arr.data != NULL);
         assert(arr.capacity > arr.size);
