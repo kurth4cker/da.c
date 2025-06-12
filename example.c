@@ -52,6 +52,7 @@ main(void)
         assert(arr.size == limit);
         assert(arr.data != NULL);
         assert(arr.size <= arr.capacity);
+
         da_destroy(&arr);
     }
 
@@ -78,6 +79,7 @@ main(void)
         assert(arr.size == limit);
         assert(arr.data != NULL);
         assert(arr.size <= arr.capacity);
+
         da_destroy(&arr);
     }
 
@@ -91,6 +93,8 @@ main(void)
         assert(arr.size == 2);
         assert(strcmp(arr.data[0], "hello") == 0);
         assert(strcmp(arr.data[1], "world") == 0);
+
+        da_destroy(&arr);
     }
 
     {
@@ -102,6 +106,8 @@ main(void)
         assert(arr.capacity > arr.size);
         assert(arr.size == 2);
         assert(strcmp(arr.data[1].name, "sample-go") == 0);
+
+        da_destroy(&arr);
     }
 
     {
@@ -113,6 +119,7 @@ main(void)
         assert(arr.size == limit);
         assert(arr.data != NULL);
         assert(arr.size <= arr.capacity);
+
         da_destroy(&arr);
     }
 }
