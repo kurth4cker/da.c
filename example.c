@@ -84,6 +84,22 @@ main(void)
     }
 
     {
+        Da_Int arr = { 0 };
+        da_append_int(&arr, 99);
+        da_append_int(&arr, 99);
+        da_append_int(&arr, 99);
+        da_reset(&arr);
+        da_append_int(&arr, 1);
+        da_append_int(&arr, 2);
+
+        assert(arr.size == 2);
+        assert(arr.data[0] == 1);
+        assert(arr.data[1] == 2);
+
+        da_destroy(&arr);
+    }
+
+    {
         Da_Str arr = { 0 };
         da_append_str(&arr, "hello");
         da_append_str(&arr, "world");

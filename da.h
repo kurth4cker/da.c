@@ -37,6 +37,7 @@ da_declare_append(Da_Str, const char *, str);
 // See da.c for example implementations. You can also take a look at example.c.
 #define da_init_if_needed(arr)    da_generic_init_if_needed((Da_Generic *)(arr), sizeof(*(arr)->data))
 #define da_grow_if_needed(arr)    da_generic_grow_if_needed((Da_Generic *)(arr), sizeof(*(arr)->data))
+#define da_reset(arr)             ((arr)->size = 0)
 #define da_destroy(arr)          \
     do {                         \
         free((arr)->data);       \
