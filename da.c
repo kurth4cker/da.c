@@ -3,8 +3,20 @@
 
 #include <stdlib.h>
 #include <assert.h>
+#include <string.h>
 
 #include "da.h"
+
+bool da_generic_append(Da_Generic *arr, const void *val, size_t objsize)
+{
+    if (!da_generic_init_if_needed(arr, objsize) ||
+        !da_generic_grow_if_needed(arr, objsize)) {
+            return false;
+    }
+    memcpy((char *)arr->data+arr->size, val, objsize);
+    arr->size++;
+    return true;
+}
 
 bool da_generic_init_if_needed(Da_Generic *arr, size_t objsize)
 {
