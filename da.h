@@ -7,6 +7,7 @@
 #include <stdarg.h>
 #include <stddef.h>
 #include <stdbool.h>
+#include <stdlib.h>
 
 #define da_define_struct(Array_Type, Type)     \
     typedef struct {                           \
@@ -22,21 +23,28 @@ da_define_struct(Da_Size, size_t);
 da_define_struct(Da_Str, const char *);
 
 // append given value to the end of array, initializes if necessary, grows if necessary.
-bool da_int_append(Da_Int *arr, int val);
-bool da_double_append(Da_Double *arr, double val);
-bool da_size_append(Da_Size *arr, size_t val);
-bool da_str_append(Da_Str *arr, const char *val);
+bool da_append_int(Da_Int *arr, int val);
+bool da_append_double(Da_Double *arr, double val);
+bool da_append_size(Da_Size *arr, size_t val);
+bool da_append_str(Da_Str *arr, const char *val);
+
 
 // You can create your own dynamic arrays with this helper functions.
 // See da.c for example implementations. You can also take a look at example.c.
-#define da_init_if_needed(arr)    da_init_generic_if_needed((Da_Generic *)(arr), sizeof(*(arr)->data))
-#define da_grow_if_needed(arr)    da_grow_generic_if_needed((Da_Generic *)(arr), sizeof(*(arr)->data))
-#define da_destroy(arr)           da_destroy_generic((Da_Generic *)(arr))
+#define da_init_if_needed(arr)    da_generic_init_if_needed((Da_Generic *)(arr), sizeof(*(arr)->data))
+#define da_grow_if_needed(arr)    da_generic_grow_if_needed((Da_Generic *)(arr), sizeof(*(arr)->data))
+// #define da_destroy(arr)
+//     do {
+//         free((arr)->data);
+//         (arr)->capacity = 0;
+//     } while (0)
+
+#define da_destroy(arr)           da_generic_destroy((Da_Generic *)(arr))
 
 da_define_struct(Da_Generic, void);
 
-bool da_init_generic_if_needed(Da_Generic *arr, size_t objsize);
-bool da_grow_generic_if_needed(Da_Generic *arr, size_t objsize);
-void da_destroy_generic(Da_Generic *arr);
+bool da_generic_init_if_needed(Da_Generic *arr, size_t objsize);
+bool da_generic_grow_if_needed(Da_Generic *arr, size_t objsize);
+void da_generic_destroy(Da_Generic *arr);
 
 #endif // DA_H_INCLUDED
