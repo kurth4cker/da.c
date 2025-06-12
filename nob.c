@@ -71,6 +71,8 @@ _compile(Nob_Cmd *cmd, const char *output, const char **args, size_t count)
     add_cc_from_env_or(cmd, "cc");
     nob_cmd_append(cmd, "-std=c99", "-pedantic",
                    "-g",
+                   "-fstrict-aliasing",
+                   "-Wstrict-aliasing=2",
                    "-Wall",
                    "-Wextra",
                    "-Werror");
