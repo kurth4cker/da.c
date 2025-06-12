@@ -103,4 +103,16 @@ main(void)
         assert(arr.size == 2);
         assert(strcmp(arr.data[1].name, "sample-go") == 0);
     }
+
+    {
+        Da_Generic arr = { 0 };
+        for (size_t i = 0; i < limit; i++) {
+            da_generic_append(&arr, &i, sizeof(i));
+        }
+
+        assert(arr.size == limit);
+        assert(arr.data != NULL);
+        assert(arr.size <= arr.capacity);
+        da_destroy(&arr);
+    }
 }

@@ -45,6 +45,7 @@ da_declare_append(Da_Str, const char *, str);
 
 da_define_struct(Da_Generic, void);
 
+bool da_generic_append(Da_Generic *arr, const void *val, size_t objsize);
 bool da_generic_init_if_needed(Da_Generic *arr, size_t objsize);
 bool da_generic_grow_if_needed(Da_Generic *arr, size_t objsize);
 void da_generic_destroy(Da_Generic *arr);
